@@ -1,0 +1,228 @@
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>IFE JavaScript Task 05</title>
+</head>
+
+<body>
+
+    <div>
+        <input id='input' type="number" placeholder="请输入一个数字"></input>
+        <span>
+            <button id='left-in' onclick="leftIn()">左侧入</button>
+            <button id='right-in' onclick="rightIn()">右侧入</button>
+        </span>
+        <span>
+            <button id='left-out' onclick="leftOut()">左侧出</button>
+            <button id='right-out' onclick="rightOut()">右侧出</button>
+        </span>
+        <span>
+            <button onclick="sort()">排序</button>
+            <button onclick="bubleSort()">冒泡排序</button>
+            <button onclick="qSort()">快速排序</button>
+            <button onclick="mergeSort()">归并排序</button>
+        </span>
+    </div>
+    <div>
+        <ul id='number-array'>
+
+        </ul>
+    </div>
+
+    <script type="text/javascript">
+        function randNum(max, min) {
+            if (arguments.length == 1) {
+                return parseInt(Math.random() * max)
+            } else {
+                return parseInt(Math.random() * (max - min) + min)
+            }
+        }
+        function initTestArray(array) {
+            for (let cnt = 0; cnt < 20; cnt++) {
+                array.push(randNum(100, 3))
+            }
+        }
+
+        let inputNum = document.getElementById("input")
+        let uiArray = document.getElementById("number-array")
+        let value = ''
+        let array = []
+        initTestArray(array)
+        inputNum.addEventListener("input", p => {
+            value = inputNum.value
+        })
+        function showArray(array) {
+            uiArray.innerHTML = ''
+            array.forEach((value, index, array) => {
+                let itemNode = document.createElement("li")
+                itemNode.style.height = value * 5
+                itemNode.innerHTML = value
+                uiArray.appendChild(itemNode)
+            })
+        }
+        function leftIn() {
+            if (value == '') return;
+            // array.unshift(value)
+            for (let index = array.length - 1; index >= 0; index--) {
+                array[index + 1] = array[index]
+            }
+            array[0] = parseInt(value);
+            showArray(array)
+        }
+        function rightIn() {
+            if (value == '') return;
+            array[array.length] = value
+            showArray()
+        }
+        function leftOut() {
+            // array.shift(value)
+            for (let index in array) {
+                index = parseInt(index)
+                if (index < (array.length - 1))
+                    array[index] = array[index + 1]
+            }
+            array.length -= 1
+            showArray()
+        }
+        function rightOut() {
+            //array.pop(value)
+            array.length -= 1
+            showArray()
+        }
+        let step = 500
+        let startI = 0
+        let startJ = 0
+        let intervalList = []
+        let status = []
+
+        function swap(list, s1, s2) {
+            let temp = list[s1]
+            list[s1] = list[s2]
+            list[s2] = temp
+            status.push(list.slice())
+
+        }
+        function drawDom() {
+            let statu = status.shift()
+            if (statu == null) {
+                clearInterval(intervalList.pop())
+            } else {
+                showArray(statu)
+            }
+
+        }
+
+
+        function mergeInPlace(array, left, mid, right) {
+            let i = 0, j = mid - left
+            let cnt = 0
+            let auxArray = array.slice(left, right + 1)
+            while (cnt < auxArray.length) {
+                if (i >= (mid - left)) {
+                    array[cnt + left] = auxArray[j++]
+                } else if (j >= auxArray.length) {
+                    array[cnt + left] = auxArray[i++]
+                } else if (auxArray[i] < auxArray[j]) {
+                    array[cnt + left] = auxArray[i++]
+                } else if (auxArray[i] >= auxArray[j]) {
+                    array[cnt + left] = auxArray[j++]
+                }
+                status.push(array.slice())
+                cnt++
+            }
+        }
+        function mergeSortCore(array, left, right) {
+            if (left >= right) return
+            let mid = parseInt((left + right) / 2)
+            console.log(mid)
+            //左侧有序
+            mergeSortCore(array, left, mid)
+            //右侧有序
+            mergeSortCore(array, mid + 1, right)
+            //原地合并
+            mergeInPlace(array, left, mid + 1, right)
+
+        }
+        function mergeSort() {
+            mergeSortCore(array, 0, array.length - 1)
+            intervalList.push(setInterval(drawDom, 300))
+        }
+
+        function bubleSortCore(array) {
+            for (let index = 0; index < array.length; index++) {
+                for (let j = index + 1; j < array.length; j++) {
+                    if (array[j] > array[index]) {
+                        swap(array, index, j)
+                    }
+                }
+            }
+        }
+        function bubleSort() {
+            bubleSortCore(array)
+            intervalList.push(setInterval(drawDom, 300))
+        }
+        function qSort() {
+            qSortCore(array, 0, array.length - 1)
+            intervalList.push(setInterval(drawDom, 300))
+        }
+
+        function stepSort() {
+            for (let index = startI; index < array.length; index++) {
+                for (let j = startJ; j < array.length; j++) {
+                    if (array[j] > array[index]) {
+                        swap(array, index, j)
+                        console.log(startI, startJ)
+                        return
+                    }
+                    startI = j + 1 >= array.length ? index + 1 : index
+                    startJ = j + 1 >= array.length ? startI : j + 1
+                }
+            }
+            clearInterval(intervalList.pop())
+        }
+
+        function qSortCore(array, start, end) {
+            if (start >= end) return
+            let watcher = array[start]
+            let i = start, j = end
+            console.log(array, watcher, start, end)
+            while (i < j) {
+                while (array[j] <= watcher && i < j) j--
+                while (array[i] >= watcher && i < j) i++
+                if (i < j)
+                    swap(array, i, j)
+            }
+            if (array[i] >= watcher) {
+                swap(array, start, i)
+                qSortCore(array, start, i - 1)
+                qSortCore(array, i + 1, end)
+            }
+        }
+
+
+        window.onload = function () {
+            showArray(array)
+        }
+
+    </script>
+    <style type="text/css">
+        span:nth-child(2) {
+            margin-right: 20px;
+        }
+
+        li {
+            display: inline-block;
+            text-align: center;
+            line-height: 30px;
+            color: #fff;
+            width: auto;
+            background: hotpink;
+            margin: 10px;
+            padding: 10px;
+            border-radius: 3px;
+        }
+    </style>
+</body>
+
+</html>
